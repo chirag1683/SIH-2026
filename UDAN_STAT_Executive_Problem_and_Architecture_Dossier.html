@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UDAN-STAT / APIx — Executive Platform Dossier & SIH Problem Statement Audit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: #64748B;
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #0F172A;
+    background-color: #FFFFFF;
+    line-height: 1.55;
+    font-size: 9pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Header Card */
+  .header-card {
+    border-bottom: 2.5px solid #0284C7;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .title-area {
+    max-width: 75%;
+  }
+
+  .badge-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 2.5px 8px;
+    border-radius: 4px;
+  }
+
+  .badge-blue { background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; }
+  .badge-gold { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
+  .badge-green { background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; }
+  .badge-red { background: #FEE2E2; color: #B91C1C; border: 1px solid #FECACA; }
+
+  h1 {
+    font-size: 19pt;
+    font-weight: 900;
+    color: #0A192F;
+    margin: 4px 0 2px 0;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    font-size: 9.5pt;
+    color: #475569;
+    font-weight: 500;
+    margin-bottom: 0;
+  }
+
+  .meta-box {
+    text-align: right;
+    font-size: 7.5pt;
+    color: #64748B;
+    line-height: 1.4;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Section Headings */
+  h2 {
+    font-size: 12pt;
+    font-weight: 800;
+    color: #0A192F;
+    border-left: 4px solid #0284C7;
+    padding-left: 8px;
+    margin: 20px 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  h3 {
+    font-size: 10pt;
+    font-weight: 700;
+    color: #1E293B;
+    margin: 14px 0 6px 0;
+  }
+
+  p {
+    margin: 0 0 8px 0;
+  }
+
+  /* Callout Boxes */
+  .callout {
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin: 12px 0;
+    font-size: 8.5pt;
+  }
+
+  .callout-blue {
+    background: #F0F9FF;
+    border: 1px solid #BAE6FD;
+    border-left: 4px solid #0284C7;
+  }
+
+  .callout-gold {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-left: 4px solid #D97706;
+  }
+
+  .callout-green {
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    border-left: 4px solid #16A34A;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px 0;
+    font-size: 8pt;
+  }
+
+  th {
+    background: #0A192F;
+    color: #FFFFFF;
+    font-weight: 700;
+    text-align: left;
+    padding: 7px 9px;
+    font-size: 7.8pt;
+    letter-spacing: 0.3px;
+  }
+
+  td {
+    padding: 6px 9px;
+    border-bottom: 1px solid #E2E8F0;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td {
+    background-color: #F8FAFC;
+  }
+
+  /* Grid Cards */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 12px 0;
+  }
+
+  .card {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 8pt;
+  }
+
+  .card-title {
+    font-weight: 700;
+    color: #0A192F;
+    font-size: 8.8pt;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .formula-box {
+    background: #0D1626;
+    color: #38BDF8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    padding: 8px 12px;
+    border-radius: 5px;
+    margin: 8px 0;
+    border: 1px solid #1E2D45;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  ul, ol {
+    margin: 4px 0 8px 0;
+    padding-left: 18px;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+
+  strong {
+    color: #0F172A;
+  }
+
+  .status-tag {
+    display: inline-block;
+    font-size: 7pt;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #DCFCE7;
+    color: #166534;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER SECTION -->
+<div class="header-card">
+  <div class="title-area">
+    <div class="badge-row">
+      <span class="badge badge-blue">SMART INDIA HACKATHON 2026</span>
+      <span class="badge badge-gold">MINISTRY OF CIVIL AVIATION & DGCA</span>
+      <span class="badge badge-green">SOVEREIGN REGTECH</span>
+    </div>
+    <h1>UDAN-STAT / APIx</h1>
+    <div class="subtitle">Unified Domestic Airfare & Network Sovereign Tariff Analytics Platform</div>
+    <div style="font-size: 8pt; color: #64748B; margin-top: 3px;">
+      Comprehensive Problem Analysis, Institutional Requirements, Feature Specifications & SIH Problem Statement Verification Dossier
+    </div>
+  </div>
+  <div class="meta-box">
+    <strong>DOCUMENT ID:</strong> APIX-SIH-2026-DOSSIER<br>
+    <strong>CLASSIFICATION:</strong> Sovereign RegTech<br>
+    <strong>DATE:</strong> September 2026<br>
+    <strong>VERSION:</strong> 2.2.0 (Verified Prototype)
+  </div>
+</div>
+
+<!-- PART 1: PROBLEMS & WHAT PLATFORM DOES -->
+<h2>1. Aviation Sector Mein Asli Problems (Existing Flaws & Challenges)</h2>
+<p>
+  India ka domestic aviation sector duniya ke fastest-growing markets mein se ek hai. Lekin ticket pricing aur inflation monitoring ke field mein purane tarike real consumer ground reality se bilkul kate hue the. Niche 6 core problems hain jo is platform ne target ki hain:
+</p>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">1. Unweighted Arithmetic Average ki Dhokhadhadi</div>
+    Traditional spot checks simple arithmetic average use karte hain. <em>Indore–Coimbatore</em> (jahan din ke 150 log udte hain) par ₹2,000 ka surge aur mega corridor <em>Delhi–Mumbai</em> (jahan din ke 25,000+ log udte hain) par ₹2,000 ka surge unweighted average ko barabar move karta hai—jabki aam janta ka hazaron guna zyada paisa Delhi-Mumbai par kharch hota hai.
+  </div>
+  <div class="card">
+    <div class="card-title">2. No Official Airfare Price Index</div>
+    Jaise daal, tel, petrol ke liye MoSPI ka Consumer Price Index (CPI) hota hai, waise aviation sector mein pure airfare inflation ko track karne ke liye koi scientific, empirical sovereign index exist nahi karta tha. CPI data aaj bhi manual physical inquiry se collect hota hai.
+  </div>
+  <div class="card">
+    <div class="card-title">3. Predatory Surge Gouging (Emergency Pricing)</div>
+    Airlines medical emergency, festival season, holiday peaks ya train cancellations ke dauran last-minute (T+1) tickets ko 200% se 400% tak surge kar deti hain. Regulatory agencies ke paas is gouging ko real-time capture karne ka automated tool nahi tha.
+  </div>
+  <div class="card">
+    <div class="card-title">4. UDAN RCS Subsidies ka Misuse (VGF Risk)</div>
+    Government airlines ko taxpayer money se ₹1,000+ Crore ki Viability Gap Funding (VGF) subsidy deti hai taaki tier-2/tier-3 cities mein aam nagrik saste mein ud sake. Lekin airlines subsidized regional routes par statutory fare caps (₹2,250 – ₹5,800) se zyada charge karke subsidy bhi claim kar leti hain.
+  </div>
+  <div class="card">
+    <div class="card-title">5. Aviation Duopoly & Monopoly Risk</div>
+    IndiGo aur Air India group milkar 85%–90% domestic capacity control karte hain. High-density corridors par cartelization aur artificial capacity restriction pakadne ke liye Competition Commission of India (CCI) ke paas route-by-route live HHI analytics tool nahi tha.
+  </div>
+  <div class="card">
+    <div class="card-title">6. Reactive vs Proactive Regulation</div>
+    DGCA action tab leti thi jab public social media par gussa karti thi ya Parliament mein question raise hota tha. Koi automated, legally-admissible real-time surveillance system exist nahi karta tha.
+  </div>
+</div>
+
+<h2>2. Yeh Platform Kya Kaam Karta Hai? (Platform Architecture & Core Engine)</h2>
+<p>
+  <strong>UDAN-STAT / APIx</strong> pure desh ke <strong>80 high-density corridors (~92% domestic passenger capacity)</strong> ka real-time fare data automate karke compute karta hai:
+</p>
+
+<div class="formula-box">
+  Modified Laspeyres Sovereign Index: APIx_t = Σ [ w_r × ( P_{r,t} / P_{r,0} ) ] × 100<br>
+  Where w_r = Route Passenger Traffic Weight (DGCA Form A/B), P_{r,0} = Base Fare (Sept 2022 = 100.0)
+</div>
+
+<ul>
+  <li><strong>5 Booking Horizons:</strong> Temporal dynamic pricing curve ko capture karne ke liye 5 lead windows track hoti hain: <code>T+1</code> (Emergency/Spot), <code>T+7</code> (Headline Benchmark), <code>T+15</code>, <code>T+30</code>, aur <code>T+45</code> (Advance Booking).</li>
+  <li><strong>Statistical IQR Filtration:</strong> <code>[Q1 - 1.5·IQR, Q3 + 1.5·IQR]</code> inner fences apply karke temporary flash pricing, promotional error fares, aur unrepresentative single-seat spikes ko trim karta hai.</li>
+  <li><strong>Robust Representative Median:</strong> Filtered distribution ka median fare <code>P_{r,t}</code> nikalta hai taaki kisi ek airline ke artificial rate se index manipulate na ho sake.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- PART 2: MINISTRIES & FEATURES -->
+<h2>3. Government Ministries Ko Yeh Platform Kyun Chahiye? (Institutional Stakeholders)</h2>
+<p>
+  Is platform mein ek sovereign <strong>Gov API Gateway (<code>/gov-api</code>)</strong> banaya gaya hai jisme 5 mukhya sarkari vibhagon ke specific use-cases integrate hain:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 25%;">Government Body</th>
+      <th style="width: 35%;">Unhe Kya Chahiye? (Need & Mandate)</th>
+      <th style="width: 40%;">UDAN-STAT / APIx Kya Deta Hai?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1. DGCA</strong><br><span style="color:#64748B; font-size:7pt;">Directorate General of Civil Aviation</span></td>
+      <td><strong>Rule 135 of Aircraft Rules, 1937</strong> enforce karna taaki airlines exploitative aur predatory pricing na kar sakein.</td>
+      <td><strong>Live Anomaly Radar + 1-Click Legal Show-Cause Notice Generator</strong> jisme violation section, fare surge %, aur flight numbers court-admissible format mein aate hain.</td>
+    </tr>
+    <tr>
+      <td><strong>2. MoCA</strong><br><span style="color:#64748B; font-size:7pt;">Ministry of Civil Aviation</span></td>
+      <td>UDAN Regional Connectivity Scheme mein di ja rahi ₹1,000+ Cr VGF subsidy ka audit aur statutory fare caps ki monitoring.</td>
+      <td><strong>Geodesic Haversine Distance Engine</strong> jo route-wise fare caps (₹2,250–₹5,800) breach pakadta hai aur potential subsidy clawback calculate karta hai.</td>
+    </tr>
+    <tr>
+      <td><strong>3. MoSPI / NSO</strong><br><span style="color:#64748B; font-size:7pt;">National Statistical Office</span></td>
+      <td>Official Consumer Price Index (CPI) ke "Transport: Air Travel" component ke liye high-frequency, scientific automated data.</td>
+      <td><strong>Passenger-Weighted Laspeyres APIx Index</strong> jo manual ticket physical collection ko replace karke truthful retail inflation capture karta hai.</td>
+    </tr>
+    <tr>
+      <td><strong>4. RBI (MPCRD)</strong><br><span style="color:#64748B; font-size:7pt;">Reserve Bank of India Monetary Policy</span></td>
+      <td>Monetary Policy Committee (MPC) ke liye advance-purchase yield spread aur services inflation forecasting.</td>
+      <td><strong>T+1 vs T+30 Yield Spread Curve</strong> aur MoSPI CPI correlation series jo forward core inflation pressures ka accurate signal deti hai.</td>
+    </tr>
+    <tr>
+      <td><strong>5. CCI</strong><br><span style="color:#64748B; font-size:7pt;">Competition Commission of India</span></td>
+      <td>Corridors par airline duopoly, cartelization, aur artificial capacity cuts ki antitrust surveillance.</td>
+      <td><strong>Herfindahl-Hirschman Index (HHI) Matrix</strong> across all 80 corridors jo <code>HHI > 2500</code> hone par automated antitrust inquiry alert trigger karti hai.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. Platform Ke Har Feature Ka In-Depth Breakdown</h2>
+
+<div class="card" style="margin-bottom: 8px;">
+  <div class="card-title">📍 Feature 1: National Live Dashboard & Survey of India Route Map (/dashboard)</div>
+  <p>80 domestic corridors ka interactive live map jo 100% Survey of India boundaries ke sath compliant hai. Corridors dynamic inflation status (Normal, Moderate Surge, Critical Surge) ke mutabiq color-code hote hain. User $T+1$ se lekar $T+45$ tak horizons toggle karke live aggregate index aur national headline inflation dekh sakta hai.</p>
+</div>
+
+<div class="card" style="margin-bottom: 8px;">
+  <div class="card-title">🛡️ Feature 2: UDAN RCS Statutory Fare Cap Auditor (/udan-rcs)</div>
+  <p>Geodesic Haversine formula se airports ke beech great-circle distance calculate karta hai aur Gazette rules ke mutabiq distance-tiered fare ceilings (₹2,250 se ₹5,800) enforce karta hai. Violation pakde jane par <strong>1-Click DGCA Show-Cause Legal Notice</strong> generate karta hai citing Rule 135 of Aircraft Rules, 1937 aur Viability Gap Funding (VGF) clawbacks flag karta hai.</p>
+</div>
+
+<div class="card" style="margin-bottom: 8px;">
+  <div class="card-title">⚖️ Feature 3: Antitrust & Market Concentration (HHI Matrix) (/analysts)</div>
+  <p>Har corridor par carriers ka flight share measure karke Herfindahl-Hirschman Index compute karta hai: <code>HHI = Σ (s_i × 100)²</code>. Corridors ko <em>Competitive (&lt;1500)</em>, <em>Moderate (1500–2500)</em>, aur <em>High Concentration / Monopoly Risk (&gt;2500)</em> mein classify karta hai taaki CCI duopoly abuse ko rokk sake.</p>
+</div>
+
+<div class="card" style="margin-bottom: 8px;">
+  <div class="card-title">🚨 Feature 4: Statistical Outlier & Surge Gouging Auditor (/analysts)</div>
+  <p>IQR boundary analysis se live fare surge deviations track karta hai. Analysts slider se threshold (+20%, +50%, +80%) customize karke affected routes ko inspect kar sakte hain. System se 4 direct CSV datasets (<code>fares</code>, <code>weights</code>, <code>anomalies</code>, <code>competition</code>) export kiye ja sakte hain.</p>
+</div>
+
+<div class="card" style="margin-bottom: 8px;">
+  <div class="card-title">⛽ Feature 5: ATF (Jet Fuel) Price Shock Elasticity Simulator (/simulation)</div>
+  <p>Aviation Turbine Fuel (ATF) airlines ke OPEX ka ~35%–40% hota hai. Yeh simulator crude oil price shocks (-20% to +60%) aur configurable airline pass-through rates (η = 0.55 to 0.85) ke aadhar par calculate karta hai ki Indian air travelers par kitne <strong>₹ Hazaar Crore</strong> ka extra consumer financial burden aayega.</p>
+</div>
+
+<div class="card" style="margin-bottom: 8px;">
+  <div class="card-title">🌐 Feature 6: Sovereign Gov API Gateway (/gov-api & /gov/v1/*)</div>
+  <p>NSO, RBI, DGCA, MoCA, aur CCI ke liye machine-readable REST endpoints jo <code>X-Gov-API-Key</code> se authenticated hain. Har response standard sovereign metadata envelope mein wrap hota hai jisme provenance, versioning, aur timestamp shamil hain.</p>
+</div>
+
+<div class="card" style="margin-bottom: 8px;">
+  <div class="card-title">📐 Feature 7: Econometric Methodology & Weight Allocation Portal (/methodology & /weights)</div>
+  <p>Pura mathematical formulation transparent hai—Laspeyres formula, IQR upper/lower fences, DGCA quarterly passenger traffic allocation matrix (w_r), aur base fares table freely accessible aur auditable hain.</p>
+</div>
+
+<div class="card" style="margin-bottom: 8px;">
+  <div class="card-title">🛩️ Feature 8: Fleet & Carrier Intelligence Radar (/fleet)</div>
+  <p>IndiGo, Air India, SpiceJet, Akasa Air aur AI Express ka 5-axis competitive radar (Pricing Aggressiveness, Fleet Age, OTP Punctuality, Surge Frequency, Network Coverage) aur smart consumer booking strategies provide karta hai.</p>
+</div>
+
+<div class="page-break"></div>
+
+<!-- PART 3: SIH PROBLEM STATEMENT VERIFICATION -->
+<h2>5. Official SIH / MoSPI Problem Statement Compliance Verification</h2>
+<p>
+  Aapke diye gaye Official Problem Statement ke har ek component ka hamare actual code ke saath direct audit matrix:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 28%;">Problem Statement Demand</th>
+      <th style="width: 14%;">Status</th>
+      <th style="width: 58%;">Implementation & Codebase Mapping</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Multi-Airline Scraper Engine</strong><br>(IndiGo, Air India, SpiceJet, Akasa Air, Air India Express, OTAs)</td>
+      <td><span class="status-tag">100% PRESENT</span></td>
+      <td><code>backend/scraper.py</code> aur <code>ota_scraper.py</code> mein direct scrapers for IndiGo, Air India, SpiceJet, Akasa, AI Express with Google Flights fallback aggregator. 1,885 live scraped records in <code>raw_scraped_fares.json</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Anti-Bot, Stealth JS & Rate Limiting</strong><br>(JS-rendered pages, CAPTCHAs, bot protection, user-agent, jitter)</td>
+      <td><span class="status-tag">100% PRESENT</span></td>
+      <td>Playwright async session with <code>_STEALTH_JS</code> CDP injection (navigator.webdriver mask, WebGL spoofing), rotating user-agents, Gaussian pacing jitter (μ=2.1s), XHR/Fetch interception.</td>
+    </tr>
+    <tr>
+      <td><strong>Multi-Lead Booking Horizons</strong><br>(T+1, T+7, T+15, T+30, T+45 days)</td>
+      <td><span class="status-tag">100% PRESENT</span></td>
+      <td>Standardized across backend and frontend in <code>static_data.py</code>, database schema, route calculations, and interactive dashboard toggle controls.</td>
+    </tr>
+    <tr>
+      <td><strong>DGCA Passenger-Traffic Weighted Basket</strong><br>(DEL-BOM, DEL-BLR, BOM-BLR, DEL-CCU, BLR-HYD, MAA-DEL, etc.)</td>
+      <td><span class="status-tag">100% PRESENT</span></td>
+      <td>80 domestic corridors covering ~92% scheduled seat capacity. Route weights (w_r) derived from DGCA Form A/B passenger statistics normalized to sum = 1.0 in <code>static_data.py</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Data Cleaning Pipeline & IQR Outlier Removal</strong><br>(Missing values, sold-out flights, deduplication, IQR fences)</td>
+      <td><span class="status-tag">100% PRESENT</span></td>
+      <td>Implemented in <code>backend/pipeline.py</code> (<code>clean_and_normalize_fares</code>, <code>filter_outliers</code>). Applies [Q1 - 1.5·IQR, Q3 + 1.5·IQR] bounds, strips invalid prices, and deduplicates records.</td>
+    </tr>
+    <tr>
+      <td><strong>Real-Time Airfare Price Index (APIx)</strong><br>(Daily, weekly, monthly frequencies, Laspeyres formulation)</td>
+      <td><span class="status-tag">100% PRESENT</span></td>
+      <td>Modified Laspeyres price index formula in <code>pipeline.py</code> (<code>calculate_apix_index</code>) normalized against Sept 2022 deregulation baseline (Base = 100.0).</td>
+    </tr>
+    <tr>
+      <td><strong>Interactive Web Dashboard</strong><br>(Sector heatmaps, lead-time elasticity curves, price trends)</td>
+      <td><span class="status-tag">100% PRESENT</span></td>
+      <td>React 19 + Plotly visual dashboard at <code>localhost:5173</code> with 80-route heatmap matrix, corridor inflation cards, and booking lead-time yield spread curves.</td>
+    </tr>
+    <tr>
+      <td><strong>API for NSO & RBI Consumption</strong><br>(Automated high-frequency ingestion endpoints)</td>
+      <td><span class="status-tag">100% PRESENT</span></td>
+      <td>Dedicated <code>/gov/v1/</code> suite in <code>main.py</code> (<code>/index</code>, <code>/corridors</code>, <code>/inflation-timeseries</code>, <code>/export/index_series</code>) with <code>X-Gov-API-Key</code> security header.</td>
+    </tr>
+    <tr>
+      <td><strong>30+ Days Back-Tested Historical Timeseries</strong><br>(Reconciliation against DGCA / MoSPI CPI data)</td>
+      <td><span class="status-tag">100% PRESENT</span></td>
+      <td>Reconciled with MoSPI CPI-Transport monthly index series (2010 to 2026) in <code>backend/mospi_data.json</code> and accessible via <code>/gov/v1/inflation-timeseries</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Documentation & Presentation Material</strong></td>
+      <td><span class="status-tag">100% PRESENT</span></td>
+      <td>Comprehensive documentation: <code>README.md</code>, <code>DEPLOYMENT_GUIDE.md</code>, <code>TECHNICAL_DOCS.md</code>, <code>RESEARCH_METHODOLOGY.md</code>, official SIH PDF slides, and FastAPI Swagger docs.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>6. 4 Breakthrough Features Beyond the Problem Statement (Winning Differentiators)</h2>
+
+<div class="callout callout-green">
+  <strong>★ Institutional Value Additions That Win SIH:</strong>
+  <ol style="margin-top: 5px; margin-bottom: 0;">
+    <li><strong>UDAN RCS Statutory Fare Cap & Subsidy Auditor:</strong> Haversine distance engine jo regional subsidized routes par statutory price ceilings (₹2,250–₹5,800) enforce karta hai aur ₹1,000+ Cr Viability Gap Funding (VGF) misuse rokkta hai.</li>
+    <li><strong>1-Click DGCA Show-Cause Legal Notice Generator:</strong> Real-time gouging hone par Rule 135 of Aircraft Rules, 1937 ke tehat enforceable legal show-cause notice draft karta hai.</li>
+    <li><strong>Herfindahl-Hirschman Index (HHI) for CCI:</strong> Competition Commission of India ke liye route duopolies aur monopoly pricing detection tool (HHI &gt; 2500 alerts).</li>
+    <li><strong>ATF Fuel Shock Elasticity Simulator:</strong> Global crude fluctuations (-20% to +60%) ka direct consumer financial burden ₹ Crores mein forecast karta hai.</li>
+  </ol>
+</div>
+
+<h2>7. Evaluator Presentation & Viva Pitch (Executive Summary)</h2>
+<div class="callout callout-blue">
+  <em>"UDAN-STAT airfare monitoring ko ek manual, ad-hoc inquiry process se badalkar ek <strong>econometrically weighted, automated legal surveillance engine</strong> banata hai — jo ek taraf aam nagrik ko 4x surge pricing se bachata hai aur doosri taraf DGCA, MoCA, MoSPI aur RBI ko Rule 135 aur CPI sub-indices ke tehat instant sovereign data capability deta hai."</em>
+</div>
+
+</body>
+</html>

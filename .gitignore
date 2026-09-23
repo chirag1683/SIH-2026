@@ -62,3 +62,4 @@ apix_data.db
 raw_scraped_fares.json
 exports/
 scratch/
+.vercel
