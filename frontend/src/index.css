@@ -163,10 +163,13 @@
 /* ─── Reset ──────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   background: var(--bg-gradient);
-  background-attachment: fixed;
   color: var(--text);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -726,14 +729,31 @@ body {
   overflow-x: auto;
 }
 .carrier-badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 5px 12px;
   border-radius: 6px;
   font-size: 0.78rem;
   white-space: nowrap;
   flex-shrink: 0;
+  cursor: pointer;
+  background: none;
+  border: 1px solid transparent;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+.carrier-badge:hover {
+  transform: translateY(-2px) scale(1.03);
+  filter: brightness(1.15);
+}
+.carrier-badge:active {
+  transform: scale(0.97);
+}
+.carrier-badge.selected {
+  transform: scale(1.04);
 }
 
 /* ─── Tabs ───────────────────────────────────────────────────────────────── */
@@ -855,101 +875,58 @@ body {
 
 .apix-morph-grid-animated {
   position: absolute;
-  inset: -100px;
+  inset: 0;
   background-size: 64px 64px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.7;
-  animation: gridMorphWave 18s ease-in-out infinite alternate;
-  will-change: transform, opacity;
+  opacity: 0.6;
 }
 
-@keyframes gridMorphWave {
-  0% {
-    transform: perspective(1000px) rotateX(4deg) scale(1) translate3d(0, 0, 0);
-    opacity: 0.5;
-  }
-  50% {
-    transform: perspective(1000px) rotateX(8deg) rotateY(2deg) scale(1.04) translate3d(16px, 12px, 0);
-    opacity: 0.85;
-  }
-  100% {
-    transform: perspective(1000px) rotateX(3deg) rotateY(-2deg) scale(1.02) translate3d(-12px, -8px, 0);
-    opacity: 0.6;
-  }
-}
-
-/* ── White Blending Light Auroras ── */
+/* ── White Blending Light Auroras (Hardware accelerated, zero blur filter) ── */
 .apix-white-blend-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
   pointer-events: none;
   z-index: 0;
-  mix-blend-mode: screen;
+  will-change: opacity;
 }
 
 .orb-top {
-  top: -100px;
+  top: -80px;
   left: 50%;
   transform: translateX(-50%);
-  width: 900px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 75%);
-  animation: whiteBlendPulse 8s ease-in-out infinite alternate;
+  width: 800px;
+  height: 400px;
+  background: radial-gradient(ellipse at center, rgba(6, 182, 212, 0.12) 0%, rgba(255, 255, 255, 0.04) 40%, transparent 70%);
 }
 
 .orb-mid {
-  top: 38%;
-  left: 10%;
-  width: 700px;
-  height: 450px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 50%, transparent 75%);
-  animation: whiteBlendDrift1 14s ease-in-out infinite alternate;
+  top: 35%;
+  left: 5%;
+  width: 600px;
+  height: 380px;
+  background: radial-gradient(ellipse at center, rgba(2, 132, 199, 0.08) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
 }
 
 .orb-bottom {
   bottom: 5%;
-  right: 10%;
-  width: 800px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 50%, transparent 75%);
-  animation: whiteBlendDrift2 16s ease-in-out infinite alternate;
+  right: 5%;
+  width: 700px;
+  height: 400px;
+  background: radial-gradient(ellipse at center, rgba(167, 139, 250, 0.08) 0%, rgba(255, 255, 255, 0.03) 40%, transparent 70%);
 }
 
-@keyframes whiteBlendPulse {
-  0%   { transform: translateX(-50%) scale(0.9); opacity: 0.7; }
-  100% { transform: translateX(-50%) scale(1.15); opacity: 1; }
-}
-
-@keyframes whiteBlendDrift1 {
-  0%   { transform: translate(0, 0) scale(1); opacity: 0.6; }
-  100% { transform: translate(60px, -40px) scale(1.1); opacity: 0.9; }
-}
-
-@keyframes whiteBlendDrift2 {
-  0%   { transform: translate(0, 0) scale(1); opacity: 0.6; }
-  100% { transform: translate(-50px, 30px) scale(1.15); opacity: 0.95; }
-}
-
-/* ── Diagonal White Sweep Beam ── */
+/* ── Subtle Ambient Beam ── */
 .apix-white-sweep-beam {
   position: absolute;
-  inset: -100%;
-  background: linear-gradient(135deg, transparent 35%, rgba(255, 255, 255, 0.07) 50%, transparent 65%);
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.03) 50%, transparent 60%);
   pointer-events: none;
   z-index: 0;
-  animation: whiteSweepLoop 10s ease-in-out infinite;
-  opacity: 0.8;
-}
-
-@keyframes whiteSweepLoop {
-  0%   { transform: translate(-30%, -30%); }
-  50%  { transform: translate(30%, 30%); }
-  100% { transform: translate(-30%, -30%); }
+  opacity: 0.5;
 }
 
 /* ── Top Header Navigation ── */

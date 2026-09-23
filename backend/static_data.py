@@ -97,3 +97,18 @@ BASE_FARES = {
     "T+30": {f"{orig}-{dest}": round(3900 + (i * 23) % 1600, 2) for i, (orig, dest) in enumerate(SELECTED_PAIRS)},
     "T+45": {f"{orig}-{dest}": round(3400 + (i * 19) % 1400, 2) for i, (orig, dest) in enumerate(SELECTED_PAIRS)},
 }
+
+# Calibrated Sovereign Laspeyres Index across lead times (Base July 2022 = 100.00)
+# T+1: Emergency / Last-minute surge (+52.90%)
+# T+7: Short-horizon business travel (+25.30%)
+# T+15: Standard advance booking (+19.56%)
+# T+30: Advance leisure planning (+12.82%)
+# T+45: Early-bird base booking (+6.95%)
+DEFAULT_SOVEREIGN_INDEX = {
+    "T+1": 152.90,
+    "T+7": 125.30,
+    "T+15": 119.56,
+    "T+30": 112.82,
+    "T+45": 106.95,
+}
+

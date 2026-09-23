@@ -8,6 +8,7 @@ import Simulation from './pages/Simulation';
 import Fleet from './pages/Fleet';
 import References from './pages/References';
 import GovAPI from './pages/GovAPI';
+import UdanRcs from './pages/UdanRcs';
 import HudNav from './components/HudNav';
 
 type ThemeMode = 'light' | 'intermediate' | 'coastal' | 'dark';
@@ -27,6 +28,7 @@ const AppInner: React.FC = () => {
         {/* Legacy /weights route still works — redirects to /methodology */}
         <Route path="/weights"     element={<Methodology />} />
         <Route path="/analysts"    element={<Analysts />} />
+        <Route path="/udan-rcs"    element={<UdanRcs />} />
         <Route path="/simulation"  element={<Simulation />} />
         <Route path="/fleet"       element={<Fleet />} />
         <Route path="/references"  element={<References />} />

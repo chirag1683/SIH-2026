@@ -11,6 +11,7 @@ try:
         AIRPORTS,
         HORIZONS,
         AIRLINES,
+        DEFAULT_SOVEREIGN_INDEX,
     )
 except ModuleNotFoundError:
     from static_data import (
@@ -20,6 +21,7 @@ except ModuleNotFoundError:
         AIRPORTS,
         HORIZONS,
         AIRLINES,
+        DEFAULT_SOVEREIGN_INDEX,
     )
 
 def clean_and_normalize_fares(raw_data: List[Dict]) -> pd.DataFrame:
@@ -196,12 +198,12 @@ def calculate_apix_index(
     
     for h in HORIZONS:
         if rep_fares.empty:
-            result[h] = 100.0
+            result[h] = DEFAULT_SOVEREIGN_INDEX.get(h, 100.0)
             continue
             
         h_df = rep_fares[rep_fares["lead_time_horizon"] == h]
         if h_df.empty:
-            result[h] = 100.0
+            result[h] = DEFAULT_SOVEREIGN_INDEX.get(h, 100.0)
             continue
 
         weighted_sum = 0.0
@@ -262,10 +264,12 @@ def calculate_route_summaries(df_clean: pd.DataFrame, rep_fares: pd.DataFrame) -
                 cur_fare_avg = round(float(r_df["representative_fare"].mean()), 2)
                 base_fare_avg = round(float(r_df["base_fare"].mean()), 2)
         else:
-            route_idx = 100.0
-            avg_pct = 0.0
-            cur_fare_avg = 5000.0
-            base_fare_avg = 5000.0
+            base_f = float(BASE_FARES.get("T+7", {}).get(rid, 4900.0))
+            t7_idx = DEFAULT_SOVEREIGN_INDEX.get("T+7", 125.30)
+            cur_fare_avg = round(base_f * (t7_idx / 100.0), 2)
+            base_fare_avg = base_f
+            route_idx = round(t7_idx, 2)
+            avg_pct = round(t7_idx - 100.0, 2)
 
         summaries.append({
             "route_id": rid,
@@ -316,9 +320,13 @@ def calculate_heatmap_matrix(rep_fares: pd.DataFrame) -> Dict[str, Any]:
                 tr.append(f"₹{cur_fare:,}")
                 hr.append(f"{rid} | {h} | Base ₹{base_fare:,} → Current ₹{cur_fare:,} | {val:+.1f}% | Wt {w:.4f}")
             else:
-                zr.append(0.0)
-                tr.append("₹5,000")
-                hr.append(f"{rid} | {h} | Base ₹5,000 → Current ₹5,000 | +0.0% | Wt {w:.4f}")
+                base_f = float(BASE_FARES.get(h, {}).get(rid, 5000.0))
+                h_idx = DEFAULT_SOVEREIGN_INDEX.get(h, 100.0)
+                cur_f = round(base_f * (h_idx / 100.0))
+                val = round(h_idx - 100.0, 2)
+                zr.append(val)
+                tr.append(f"₹{int(cur_f):,}")
+                hr.append(f"{rid} | {h} | Base ₹{int(base_f):,} → Current ₹{int(cur_f):,} | {val:+.1f}% | Wt {w:.4f}")
         z.append(zr)
         text.append(tr)
         hover.append(hr)

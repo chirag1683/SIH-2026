@@ -84,11 +84,11 @@ function pctColor(val: number): string {
 
 /* ─── Carrier strip data ────────────────────────────────────────────────── */
 const CARRIERS = [
-  { code:'6E', name:'IndiGo',     color:'#3B82F6', bg:'rgba(59,130,246,0.12)'  },
-  { code:'AI', name:'Air India',  color:'#EF4444', bg:'rgba(239,68,68,0.12)'   },
-  { code:'SG', name:'SpiceJet',   color:'#F97316', bg:'rgba(249,115,22,0.12)'  },
-  { code:'IX', name:'AI Express', color:'#EF4444', bg:'rgba(239,68,68,0.08)'   },
-  { code:'QP', name:'Akasa Air',  color:'#A78BFA', bg:'rgba(167,139,250,0.12)' },
+  { code:'6E', name:'IndiGo',     fullName:'IndiGo (6E)',            color:'#3B82F6', bg:'rgba(59,130,246,0.12)'  },
+  { code:'AI', name:'Air India',  fullName:'Air India (AI)',         color:'#EF4444', bg:'rgba(239,68,68,0.12)'   },
+  { code:'SG', name:'SpiceJet',   fullName:'SpiceJet (SG)',          color:'#F97316', bg:'rgba(249,115,22,0.12)'  },
+  { code:'IX', name:'AI Express', fullName:'Air India Express (IX)', color:'#EF4444', bg:'rgba(239,68,68,0.08)'   },
+  { code:'QP', name:'Akasa Air',  fullName:'Akasa Air (QP)',         color:'#A78BFA', bg:'rgba(167,139,250,0.12)' },
 ];
 const MONTHS = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -123,6 +123,18 @@ const Dashboard: React.FC = () => {
 
   const airlineParam = aggregation === 'Airline Specific' ? airlineFilter : 'all';
   const routeParam   = aggregation === 'Route Specific'   ? routeFilter   : 'all';
+
+  const handleCarrierClick = (fullName: string) => {
+    if (aggregation === 'Airline Specific' && airlineFilter === fullName) {
+      setAggregation('Overall Industry');
+      setAirlineFilter('all');
+      setRouteFilter('all');
+    } else {
+      setAggregation('Airline Specific');
+      setAirlineFilter(fullName);
+      setRouteFilter('all');
+    }
+  };
 
   useEffect(() => {
     fetch(`${API}/api/routes/list`)
@@ -223,6 +235,28 @@ const Dashboard: React.FC = () => {
     return routeSummary;
   }, [routeSummary, aggregation, routeFilter]);
 
+  /* ── Precalculate Bezier curves and unique airports (avoids 6,400 calculations on every render) ── */
+  const mapData = useMemo(() => {
+    const shares = mapRoutes.map(x => x.passenger_share);
+    const mn = shares.length > 0 ? Math.min(...shares) : 0;
+    const mx = shares.length > 0 ? Math.max(...shares) : 1;
+    const routesWithPts = mapRoutes.map(r => ({
+      ...r,
+      pts: bezier([r.origin_lat, r.origin_lon], [r.dest_lat, r.dest_lon]),
+      weight: mapRoutes.length === 1 ? 4 : 1 + 5 * ((r.passenger_share - mn) / (mx - mn + 1e-9)),
+      color: pctColor(r.avg_pct_change),
+    }));
+
+    const airportMap = new Map<string, [number, number]>();
+    mapRoutes.forEach(r => {
+      if (!airportMap.has(r.origin)) airportMap.set(r.origin, [r.origin_lat, r.origin_lon]);
+      if (!airportMap.has(r.destination)) airportMap.set(r.destination, [r.dest_lat, r.dest_lon]);
+    });
+    const airports = Array.from(airportMap.entries()).map(([code, coords]) => ({ code, coords }));
+
+    return { routesWithPts, airports };
+  }, [mapRoutes]);
+
   const PB = plotBase(dark);
   const AX = axisStyle(dark);
 
@@ -284,12 +318,47 @@ const Dashboard: React.FC = () => {
       {/* ── Carrier Strip ── */}
       <div className="carrier-strip">
         <span style={{fontSize:'0.72rem', fontWeight:700, textTransform:'uppercase', letterSpacing:1.5, color:'var(--sub)', whiteSpace:'nowrap'}}>Active Fleet:</span>
-        {CARRIERS.map(c => (
-          <div key={c.code} className="carrier-badge" style={{background:c.bg, border:`1px solid ${c.color}55`}}>
-            <span style={{color:c.color, fontWeight:900, fontFamily:'JetBrains Mono,monospace', fontSize:'0.82rem'}}>{c.code}</span>
-            <span style={{color:'var(--text)', fontWeight:600, fontSize:'0.8rem'}}>{c.name}</span>
-          </div>
-        ))}
+        <button
+          type="button"
+          onClick={() => {
+            setAggregation('Overall Industry');
+            setAirlineFilter('all');
+            setRouteFilter('all');
+          }}
+          className={`carrier-badge ${aggregation === 'Overall Industry' ? 'selected' : ''}`}
+          style={{
+            background: aggregation === 'Overall Industry' ? 'rgba(6,182,212,0.18)' : 'rgba(255,255,255,0.03)',
+            border: aggregation === 'Overall Industry' ? '1.5px solid var(--cyan)' : '1px solid var(--border)',
+            boxShadow: aggregation === 'Overall Industry' ? '0 0 10px rgba(6,182,212,0.25)' : 'none',
+          }}
+          title="Show All Airlines (Overall Industry)"
+        >
+          <span style={{color:'var(--cyan)', fontWeight:900, fontFamily:'JetBrains Mono,monospace', fontSize:'0.82rem'}}>ALL</span>
+          <span style={{color:'var(--text)', fontWeight:600, fontSize:'0.8rem'}}>Industry</span>
+        </button>
+        {CARRIERS.map(c => {
+          const isSelected = aggregation === 'Airline Specific' && airlineFilter === c.fullName;
+          return (
+            <button
+              key={c.code}
+              type="button"
+              onClick={() => handleCarrierClick(c.fullName)}
+              className={`carrier-badge ${isSelected ? 'selected' : ''}`}
+              style={{
+                background: isSelected ? `${c.color}28` : c.bg,
+                border: isSelected ? `2px solid ${c.color}` : `1px solid ${c.color}55`,
+                boxShadow: isSelected ? `0 0 12px ${c.color}55` : 'none',
+              }}
+              title={isSelected ? `Deselect ${c.name} (Return to Overall Industry)` : `Filter dashboard by ${c.name} (${c.code})`}
+            >
+              <span style={{color:c.color, fontWeight:900, fontFamily:'JetBrains Mono,monospace', fontSize:'0.82rem'}}>{c.code}</span>
+              <span style={{color:'var(--text)', fontWeight:600, fontSize:'0.8rem'}}>{c.name}</span>
+              {isSelected && (
+                <span style={{fontSize:'0.75rem', color:c.color, fontWeight:900, marginLeft:2}}>✓</span>
+              )}
+            </button>
+          );
+        })}
         <div style={{marginLeft:'auto', display:'flex', gap:16, fontSize:'0.75rem', fontFamily:'JetBrains Mono,monospace', color:'var(--sub)', whiteSpace:'nowrap', alignItems:'center'}}>
           <span>ROUTES: <b style={{color:'var(--text)'}}>{routeSummary.length}</b><span style={{color:'var(--cyan)', marginLeft:4}}>/ 80 {aggregation === 'Overall Industry' ? 'Sovereign' : 'Active'}</span></span>
           <span>FEED: <b style={{color:'var(--green)'}}>● LIVE</b></span>
@@ -304,7 +373,7 @@ const Dashboard: React.FC = () => {
               ? `Corridor: ${routeFilter}`
               : aggregation === 'Airline Specific' && airlineFilter !== 'all'
               ? `Carrier: ${airlineFilter.split(' ')[0]}`
-              : 'National Sovereign APIx'}
+              : 'UDAN-STAT Sovereign Benchmark'}
           </div>
           <div className="hud-ticker-live">{loading ? '—' : ti7.toFixed(1)}</div>
           <div style={{fontSize:'0.75rem', color:'var(--sub)', marginTop:4, fontFamily:'JetBrains Mono,monospace'}}>
@@ -326,7 +395,7 @@ const Dashboard: React.FC = () => {
 
       {/* ── 30-Day Forward Trend ── */}
       <div style={{marginBottom:8}}>
-        <div className="section-label">30-Day APIx Forward Trajectory</div>
+        <div className="section-label">30-Day UDAN-STAT Forward Trajectory</div>
         <div style={{color:'var(--sub)', fontSize:'0.8rem', marginBottom:8}}>
           Projected index values across booking horizons · Base = 100 (parity)
         </div>
@@ -404,94 +473,82 @@ const Dashboard: React.FC = () => {
                   🟡 Mild (+0–23%) · 🟠 Moderate (+23–25.5%) · 🔴 Elevated (+25.5–27.5%) · 🔺 High Surge (&gt;27.5%) · Arc width = DGCA Share
                 </div>
                 <div className="map-wrap">
-                  <MapContainer center={[22.5,80]} zoom={5} style={{height:'100%',width:'100%'}} zoomControl>
+                  <MapContainer center={[22.5,80]} zoom={5} style={{height:'100%',width:'100%'}} zoomControl scrollWheelZoom={false}>
                     <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}" attribution="&copy; Esri, DeLorme, NAVTEQ" />
-                    {mapRoutes.map(r => {
-                      const pts = bezier([r.origin_lat,r.origin_lon],[r.dest_lat,r.dest_lon]);
-                      const shares = mapRoutes.map(x=>x.passenger_share);
-                      const mn=Math.min(...shares), mx=Math.max(...shares);
-                      const weight = mapRoutes.length === 1 ? 4 : 1+5*((r.passenger_share-mn)/(mx-mn+1e-9));
-                      return (
-                        <Polyline key={r.route_id} positions={pts}
-                          pathOptions={{color:pctColor(r.avg_pct_change), weight, opacity:0.85}}>
-                          <Popup>
-                            <div style={{fontFamily:'Inter,sans-serif', minWidth:220, color:'#0F172A'}}>
-                              <div style={{fontSize:'1.05rem', fontWeight:800, color:'#0284C7', marginBottom:3, display:'flex', alignItems:'center', gap:6}}>
-                                <span>{r.origin}</span>
-                                <span style={{color:'#64748B'}}>➔</span>
-                                <span>{r.destination}</span>
-                              </div>
-                              <div style={{fontSize:'0.72rem', color:'#64748B', marginBottom:8, textTransform:'uppercase', letterSpacing:0.5, fontWeight:700}}>
-                                Directional City-Pair Corridor
-                              </div>
-
-                              <div style={{background:'#F1F5F9', padding:'8px 10px', borderRadius:6, marginBottom:8}}>
-                                <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.82rem', marginBottom:3}}>
-                                  <span style={{color:'#475569'}}>Corridor Index (T+7):</span>
-                                  <b style={{color:'#0F172A', fontFamily:'JetBrains Mono,monospace'}}>{r.route_index.toFixed(1)} PTS</b>
-                                </div>
-                                <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.82rem', marginBottom:3}}>
-                                  <span style={{color:'#475569'}}>Corridor Fare Inflation:</span>
-                                  <b style={{color:r.avg_pct_change>0?'#DC2626':'#059669', fontFamily:'JetBrains Mono,monospace'}}>
-                                    {r.avg_pct_change>0?'+':''}{r.avg_pct_change.toFixed(1)}%
-                                  </b>
-                                </div>
-                                <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.82rem'}}>
-                                  <span style={{color:'#475569'}}>National APIx Benchmark:</span>
-                                  <span style={{color:'#0284C7', fontWeight:700, fontFamily:'JetBrains Mono,monospace'}}>125.3 PTS</span>
-                                </div>
-                              </div>
-
-                              <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.8rem', color:'#475569', marginBottom:3}}>
-                                <span>Representative Fare:</span>
-                                <b style={{color:'#0F172A'}}>₹{r.avg_current_fare ? Math.round(r.avg_current_fare).toLocaleString() : '5,572'}</b>
-                              </div>
-                              <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.8rem', color:'#475569', marginBottom:10}}>
-                                <span>DGCA Traffic Weight:</span>
-                                <b style={{color:'#0F172A'}}>{(r.passenger_share*100).toFixed(3)}%</b>
-                              </div>
-
-                              <button
-                                onClick={() => {
-                                  setAggregation('Route Specific');
-                                  setRouteFilter(r.route_id);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                                style={{
-                                  width: '100%',
-                                  padding: '7px 0',
-                                  background: '#0284C7',
-                                  color: '#FFFFFF',
-                                  border: 'none',
-                                  borderRadius: 6,
-                                  fontSize: '0.78rem',
-                                  fontWeight: 700,
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  gap: 5
-                                }}
-                              >
-                                Filter Dashboard to {r.route_id} ➔
-                              </button>
+                    {mapData.routesWithPts.map(r => (
+                      <Polyline key={r.route_id} positions={r.pts}
+                        pathOptions={{color: r.color, weight: r.weight, opacity: 0.85}}>
+                        <Popup>
+                          <div style={{fontFamily:'Inter,sans-serif', minWidth:220, color:'#0F172A'}}>
+                            <div style={{fontSize:'1.05rem', fontWeight:800, color:'#0284C7', marginBottom:3, display:'flex', alignItems:'center', gap:6}}>
+                              <span>{r.origin}</span>
+                              <span style={{color:'#64748B'}}>➔</span>
+                              <span>{r.destination}</span>
                             </div>
-                          </Popup>
-                        </Polyline>
-                      );
-                    })}
-                    {Array.from(new Set(mapRoutes.flatMap(r=>[r.origin,r.destination]))).map(code => {
-                      const row = mapRoutes.find(r=>r.origin===code||r.destination===code);
-                      if(!row) return null;
-                      const lat = row.origin===code ? row.origin_lat : row.dest_lat;
-                      const lon = row.origin===code ? row.origin_lon : row.dest_lon;
-                      return (
-                        <CircleMarker key={code} center={[lat,lon]} radius={6}
-                          pathOptions={{color:'#06B6D4',fillColor:'#06B6D4',fillOpacity:1,weight:2}}>
-                          <Popup><b style={{color:'#06B6D4'}}>{code}</b></Popup>
-                        </CircleMarker>
-                      );
-                    })}
+                            <div style={{fontSize:'0.72rem', color:'#64748B', marginBottom:8, textTransform:'uppercase', letterSpacing:0.5, fontWeight:700}}>
+                              Directional City-Pair Corridor
+                            </div>
+
+                            <div style={{background:'#F1F5F9', padding:'8px 10px', borderRadius:6, marginBottom:8}}>
+                              <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.82rem', marginBottom:3}}>
+                                <span style={{color:'#475569'}}>Corridor Index (T+7):</span>
+                                <b style={{color:'#0F172A', fontFamily:'JetBrains Mono,monospace'}}>{r.route_index.toFixed(1)} PTS</b>
+                              </div>
+                              <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.82rem', marginBottom:3}}>
+                                <span style={{color:'#475569'}}>Corridor Fare Inflation:</span>
+                                <b style={{color:r.avg_pct_change>0?'#DC2626':'#059669', fontFamily:'JetBrains Mono,monospace'}}>
+                                  {r.avg_pct_change>0?'+':''}{r.avg_pct_change.toFixed(1)}%
+                                </b>
+                              </div>
+                              <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.82rem'}}>
+                                <span style={{color:'#475569'}}>National APIx Benchmark:</span>
+                                <span style={{color:'#0284C7', fontWeight:700, fontFamily:'JetBrains Mono,monospace'}}>125.3 PTS</span>
+                              </div>
+                            </div>
+
+                            <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.8rem', color:'#475569', marginBottom:3}}>
+                              <span>Representative Fare:</span>
+                              <b style={{color:'#0F172A'}}>₹{r.avg_current_fare ? Math.round(r.avg_current_fare).toLocaleString() : '5,572'}</b>
+                            </div>
+                            <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.8rem', color:'#475569', marginBottom:10}}>
+                              <span>DGCA Traffic Weight:</span>
+                              <b style={{color:'#0F172A'}}>{(r.passenger_share*100).toFixed(3)}%</b>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                setAggregation('Route Specific');
+                                setRouteFilter(r.route_id);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '7px 0',
+                                background: '#0284C7',
+                                color: '#FFFFFF',
+                                border: 'none',
+                                borderRadius: 6,
+                                fontSize: '0.78rem',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 5
+                              }}
+                            >
+                              Filter Dashboard to {r.route_id} ➔
+                            </button>
+                          </div>
+                        </Popup>
+                      </Polyline>
+                    ))}
+                    {mapData.airports.map(a => (
+                      <CircleMarker key={a.code} center={a.coords} radius={6}
+                        pathOptions={{color:'#06B6D4',fillColor:'#06B6D4',fillOpacity:1,weight:2}}>
+                        <Popup><b style={{color:'#06B6D4'}}>{a.code}</b></Popup>
+                      </CircleMarker>
+                    ))}
                   </MapContainer>
                 </div>
               </div>

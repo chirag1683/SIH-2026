@@ -10,6 +10,7 @@ const TABS = [
   { label: 'Index Calculator',  short: 'Calculator',  path: '/dashboard'   },
   { label: 'Methodology',       short: 'Methodology', path: '/methodology' },
   { label: 'Antitrust & HHI',   short: 'Antitrust',   path: '/analysts'    },
+  { label: 'UDAN RCS Auditor',  short: 'UDAN RCS',    path: '/udan-rcs'    },
   { label: 'Fuel Simulator',    short: 'Simulation',  path: '/simulation'  },
   { label: 'Carrier Fleet',     short: 'Fleet',       path: '/fleet'       },
   { label: 'Data & References', short: 'References',  path: '/references'  },
@@ -86,8 +87,8 @@ const HudNav: React.FC = () => {
           onClick={() => navigate('/')}
           aria-label="Go to home"
         >
-          <span className="hud-logo-text">APIx</span>
-          <span className="hud-badge" aria-hidden="true">RESEARCH</span>
+          <span className="hud-logo-text" style={{ letterSpacing: '1px' }}>UDAN-STAT</span>
+          <span className="hud-badge" aria-hidden="true">SOVEREIGN</span>
         </button>
 
         {/* ── Desktop Tabs (strictly hidden on screens <= 900px) ── */}
@@ -138,7 +139,7 @@ const HudNav: React.FC = () => {
         <div className="hud-mobile-row">
           {/* Current active page indicator pill */}
           <span className="hud-mobile-active-page">
-            {activeTab ? activeTab.short : 'APIx'}
+            {activeTab ? activeTab.short : 'UDAN-STAT'}
           </span>
 
           {/* Sync Button */}

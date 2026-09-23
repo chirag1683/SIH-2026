@@ -59,22 +59,92 @@ const MODULES: ModuleItem[] = [
     tag: '5 Fleets · 92% Domestic Share',
     path: '/fleet',
   },
+  {
+    number: '07',
+    category: 'STATUTORY SURVEILLANCE',
+    title: 'UDAN RCS Fare Cap Compliance Auditor',
+    description: 'Surveils regional connectivity corridors against distance-tiered statutory fare caps under UDAN (Ude Desh Ka Aam Nagrik) to prevent predatory pricing and calculate VGF clawbacks.',
+    tag: 'MoCA Distance Caps · DGCA Notices',
+    path: '/udan-rcs',
+  },
 ];
 
 import { API_BASE_URL } from '../config';
 
-const HORIZONS_DEFAULT = [
-  { horizon: 'T+1', label: 'Last Minute', index: '152.90', change: '+52.90%', color: '#F87171' },
-  { horizon: 'T+7', label: 'Short Horizon', index: '120.09', change: '+20.09%', color: '#FBBF24' },
-  { horizon: 'T+15', label: 'Standard Lead', index: '115.67', change: '+15.67%', color: '#60A5FA' },
-  { horizon: 'T+30', label: 'Advance Leisure', index: '113.86', change: '+13.86%', color: '#34D399' },
-  { horizon: 'T+45', label: 'Base Booking', index: '114.86', change: '+14.86%', color: '#A78BFA' },
+interface HorizonDetail {
+  horizon: string;
+  label: string;
+  index: string;
+  change: string;
+  color: string;
+  avgFare: string;
+  segment: string;
+  yieldMultiplier: string;
+  pricingStrategy: string;
+}
+
+const HORIZONS_DEFAULT: HorizonDetail[] = [
+  {
+    horizon: 'T+1',
+    label: 'Last Minute',
+    index: '152.90',
+    change: '+52.90%',
+    color: '#EF4444',
+    avgFare: '₹12,850',
+    segment: 'Emergency & Urgent Corporate',
+    yieldMultiplier: '2.14x',
+    pricingStrategy: 'Inelastic Last-Seat Surge Pricing'
+  },
+  {
+    horizon: 'T+7',
+    label: 'Short Horizon',
+    index: '125.30',
+    change: '+25.30%',
+    color: '#F59E0B',
+    avgFare: '₹7,420',
+    segment: 'Business & Executive Travel',
+    yieldMultiplier: '1.42x',
+    pricingStrategy: 'Corporate Peak Yield Dynamic Tier'
+  },
+  {
+    horizon: 'T+15',
+    label: 'Standard Lead',
+    index: '119.56',
+    change: '+19.56%',
+    color: '#38BDF8',
+    avgFare: '₹6,150',
+    segment: 'Standard Advance Passenger',
+    yieldMultiplier: '1.18x',
+    pricingStrategy: 'Median Equilibrium Tariff Range'
+  },
+  {
+    horizon: 'T+30',
+    label: 'Advance Leisure',
+    index: '112.82',
+    change: '+12.82%',
+    color: '#10B981',
+    avgFare: '₹5,200',
+    segment: 'Leisure & Family Vacations',
+    yieldMultiplier: '1.05x',
+    pricingStrategy: 'Early Bird Promotional Allotment'
+  },
+  {
+    horizon: 'T+45',
+    label: 'Base Booking',
+    index: '106.95',
+    change: '+6.95%',
+    color: '#A78BFA',
+    avgFare: '₹4,650',
+    segment: 'Long-Horizon Base Anchor',
+    yieldMultiplier: '1.00x',
+    pricingStrategy: 'Statutory Base Fare Baseline'
+  },
 ];
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [activeHorizon, setActiveHorizon] = useState('T+7');
-  const [horizonsData, setHorizonsData] = useState(HORIZONS_DEFAULT);
+  const [horizonsData, setHorizonsData] = useState<HorizonDetail[]>(HORIZONS_DEFAULT);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/index`)
@@ -120,15 +190,18 @@ const Landing: React.FC = () => {
 
           <div className="apix-kicker">
             <span className="apix-kicker-dot" />
-            <span>DOMESTIC CIVIL AVIATION MACROECONOMIC TELEMETRY</span>
+            <span>MINISTRY OF CIVIL AVIATION · SOVEREIGN MACROECONOMIC TELEMETRY</span>
           </div>
 
           <h1 className="apix-headline">
-            The Airfare Price Index of India
+            UDAN-STAT
           </h1>
+          <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--cyan)', marginTop: -12, marginBottom: 16, letterSpacing: '0.5px' }}>
+            Unified Domestic Airfare & Network Sovereign Tariff Analytics
+          </div>
 
           <p className="apix-subhead">
-            A high-frequency macroeconomic price index tracking domestic passenger tariff inflation across{' '}
+            India's sovereign macroeconomic airfare price index tracking domestic passenger tariff inflation across{' '}
             <strong>80 scheduled flight corridors</strong>. Standardized using a <strong>Modified Laspeyres Index</strong>,
             passenger volume traffic weights, and statistical <strong>Interquartile Range (IQR)</strong> anomaly rejection.
           </p>
@@ -149,7 +222,7 @@ const Landing: React.FC = () => {
             <div className="apix-terminal-header">
               <div className="apix-terminal-title">
                 <span className="terminal-pulse" />
-                <span>COMPOSITE NATIONAL APIx (BASE SEPT 2022 = 100.00)</span>
+                <span>COMPOSITE NATIONAL UDAN-STAT (BASE SEPT 2022 = 100.00)</span>
               </div>
               <div className="apix-terminal-meta">
                 <span>80 ROUTES MONITORED</span>
@@ -187,29 +260,29 @@ const Landing: React.FC = () => {
                 </div>
 
                 <div className="readout-box">
-                  <span className="readout-label">DOMESTIC PAX COVERAGE</span>
+                  <span className="readout-label">TYPICAL SPOT FARE ({activeData.horizon})</span>
                   <div className="readout-val-wrap">
-                    <span className="readout-val">76.4</span>
-                    <span className="readout-unit">%</span>
+                    <span className="readout-val">{activeData.avgFare}</span>
+                    <span className="readout-unit">AVG</span>
                   </div>
-                  <span className="readout-sub">of All Indian Air Travel (DGCA)</span>
+                  <span className="readout-sub">{activeData.segment}</span>
                 </div>
 
                 <div className="readout-box">
-                  <span className="readout-label">STATISTICAL INTEGRITY</span>
+                  <span className="readout-label">YIELD MULTIPLIER ({activeData.horizon})</span>
                   <div className="readout-val-wrap">
-                    <span className="readout-val" style={{ fontSize: '1.4rem', letterSpacing: '0px' }}>[Q1, Q3]</span>
+                    <span className="readout-val" style={{ fontSize: '1.8rem' }}>{activeData.yieldMultiplier}</span>
                   </div>
-                  <span className="readout-sub">IQR Filtered Median</span>
+                  <span className="readout-sub">{activeData.pricingStrategy}</span>
                 </div>
 
                 <div className="readout-box">
-                  <span className="readout-label">CORRIDORS IN BASKET</span>
+                  <span className="readout-label">SOVEREIGN BASKET</span>
                   <div className="readout-val-wrap">
                     <span className="readout-val">80</span>
                     <span className="readout-unit">ROUTES</span>
                   </div>
-                  <span className="readout-sub">20 Primary Airport Hubs</span>
+                  <span className="readout-sub">92% Scheduled Domestic Capacity</span>
                 </div>
               </div>
             </div>
@@ -265,9 +338,9 @@ const Landing: React.FC = () => {
 
           <div className="apix-sec-head" style={{ marginBottom: 36 }}>
             <span className="apix-sec-tag">METHODOLOGY COMPARISON</span>
-            <h2 className="apix-sec-title">APIx Laspeyres Standard vs. Simple Average</h2>
+            <h2 className="apix-sec-title">UDAN-STAT Laspeyres Standard vs. Simple Average</h2>
             <p className="apix-sec-desc">
-              Why unweighted simple arithmetic averages fail for national airfare inflation and how APIx resolves statistical distortion.
+              Why unweighted simple arithmetic averages fail for national airfare inflation and how UDAN-STAT resolves statistical distortion.
             </p>
           </div>
 
@@ -286,7 +359,7 @@ const Landing: React.FC = () => {
                   </th>
                   <th style={{ width: '37%' }} className="th-highlight">
                     <div className="th-col-header">
-                      <span className="th-title">APIx Modified Laspeyres Standard</span>
+                      <span className="th-title">UDAN-STAT Modified Laspeyres Standard</span>
                       <span className="th-pill-good">✓ PASSENGER WEIGHTED</span>
                     </div>
                   </th>
@@ -380,9 +453,9 @@ const Landing: React.FC = () => {
         <div className="apix-foot-container">
           <div className="apix-foot-top">
             <div>
-              <div className="apix-foot-title">APIx • Airfare Price Index Platform</div>
+              <div className="apix-foot-title">UDAN-STAT • Aviation Sovereign Tariff Platform</div>
               <div className="apix-foot-sub">
-                Domestic civil aviation economic intelligence platform computing standardized Laspeyres price indices across Indian flight corridors.
+                Ministry of Civil Aviation sovereign economic intelligence platform computing standardized Laspeyres price indices across Indian flight corridors.
               </div>
             </div>
             <div className="apix-foot-pills">
