@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Plot from 'react-plotly.js';
 import { useTheme } from '../App';
 import { API_BASE_URL } from '../config';
+import { getFallbackRcsData } from '../fallbackUdanData';
 
 const API = API_BASE_URL;
 
@@ -71,8 +72,10 @@ const UdanRcs: React.FC = () => {
   const [selectedStatus, setSelectedStatus]   = useState('all');
   const [searchQuery, setSearchQuery]         = useState('');
 
-  // Data
-  const [auditData, setAuditData]             = useState<RcsAuditResponse | null>(null);
+  // Data - default to instant client-side calculation so Vercel & mobile are never blank
+  const [auditData, setAuditData] = useState<RcsAuditResponse>(() => 
+    getFallbackRcsData('T+7', 'all', 'all')
+  );
   const [loading, setLoading]                 = useState(false);
   const [flaggedModalItem, setFlaggedModalItem] = useState<RcsRouteItem | null>(null);
   const [downloading, setDownloading]         = useState(false);
@@ -85,11 +88,16 @@ const UdanRcs: React.FC = () => {
     fetch(`${API}/api/udan/rcs-compliance?${qs}`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {
-        if (data && data.routes) {
+        if (data && data.routes && data.routes.length > 0) {
           setAuditData(data);
+        } else {
+          setAuditData(getFallbackRcsData(selectedHorizon, carrierParam, selectedStatus));
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        // Fallback for Vercel / offline without running local python server
+        setAuditData(getFallbackRcsData(selectedHorizon, carrierParam, selectedStatus));
+      })
       .finally(() => setLoading(false));
   }, [selectedHorizon, selectedCarrier, selectedStatus]);
 
@@ -109,14 +117,17 @@ const UdanRcs: React.FC = () => {
     );
   }, [auditData, searchQuery]);
 
-  // Export CSV Handler
+  // Export CSV Handler (Works online and offline on Vercel)
   const handleDownloadCsv = () => {
     setDownloading(true);
     const carrierParam = selectedCarrier === 'All Airlines' ? 'all' : selectedCarrier;
     const url = `${API}/api/udan/export-rcs-report?horizon=${encodeURIComponent(selectedHorizon)}&carrier=${encodeURIComponent(carrierParam)}&status=${encodeURIComponent(selectedStatus)}`;
     
     fetch(url)
-      .then(res => res.blob())
+      .then(res => {
+        if (!res.ok) throw new Error('API unavailable');
+        return res.blob();
+      })
       .then(blob => {
         const link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
@@ -125,7 +136,31 @@ const UdanRcs: React.FC = () => {
         link.click();
         document.body.removeChild(link);
       })
-      .catch(() => alert('Failed to download audit CSV.'))
+      .catch(() => {
+        // Client-side CSV generation fallback for Vercel
+        const header = [
+          'Route_ID,Origin,Destination,Stage_Length_km,Statutory_Cap_INR,Observed_Market_Fare_INR,Excess_Surcharge_INR,Excess_Pct,Compliance_Status,Regulatory_Directive,Potential_VGF_Clawback_INR'
+        ];
+        const rows = (auditData.routes || []).map(r => 
+          `"${r.route_id}","${r.origin}","${r.destination}",${r.stage_length_km},${r.statutory_cap},${r.actual_fare},${r.excess_surcharge},${r.excess_pct},"${r.status}","${r.regulatory_action}",${r.potential_vgf_clawback}`
+        );
+        const csvText = [
+          'MoCA_UDAN_RCS_COMPLIANCE_AUDIT_DOSSIER',
+          `Generated At: ${new Date().toISOString()} UTC`,
+          `Booking Horizon: ${selectedHorizon}`,
+          '',
+          ...header,
+          ...rows
+        ].join('\n');
+
+        const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = `moca_udan_rcs_audit_${selectedHorizon}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
       .finally(() => setDownloading(false));
   };
 
