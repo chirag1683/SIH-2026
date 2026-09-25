@@ -17,6 +17,8 @@
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--sub);
+  flex-shrink: 0;
+  user-select: none;
 }
 
 .threeui-button:hover {

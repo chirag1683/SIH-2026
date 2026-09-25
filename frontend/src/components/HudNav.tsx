@@ -28,6 +28,85 @@ const HudNav: React.FC = () => {
   const [menuOpen, setMenuOpen]     = useState(false);
   const themeRef = useRef<HTMLDivElement>(null);
   const menuRef  = useRef<HTMLDivElement>(null);
+  const navTabsRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+
+  // Auto-scroll active tab into view on route change
+  useEffect(() => {
+    if (!navTabsRef.current) return;
+    const activeEl = navTabsRef.current.querySelector<HTMLElement>('.threeui-button.active');
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [location.pathname]);
+
+  // Horizontal mouse-wheel scrolling
+  useEffect(() => {
+    const el = navTabsRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (el.scrollWidth > el.clientWidth) {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          el.scrollLeft += e.deltaY;
+        }
+      }
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
+  // Global mouse up to reliably stop drag even outside container
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        setTimeout(() => {
+          dragDistanceRef.current = 0;
+        }, 50);
+      }
+    };
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || !navTabsRef.current) return;
+    isDraggingRef.current = true;
+    startXRef.current = e.pageX - navTabsRef.current.offsetLeft;
+    scrollLeftRef.current = navTabsRef.current.scrollLeft;
+    dragDistanceRef.current = 0;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || !navTabsRef.current) return;
+    const x = e.pageX - navTabsRef.current.offsetLeft;
+    const walk = (x - startXRef.current);
+    dragDistanceRef.current = Math.abs(walk);
+    navTabsRef.current.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+    setTimeout(() => {
+      dragDistanceRef.current = 0;
+    }, 50);
+  };
+
+  const handleMouseLeave = () => {
+    isDraggingRef.current = false;
+  };
+
+  const handleTabClick = (path: string, e: React.MouseEvent) => {
+    if (dragDistanceRef.current > 6) {
+      e.preventDefault();
+      return;
+    }
+    navigate(path);
+  };
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -92,12 +171,21 @@ const HudNav: React.FC = () => {
         </button>
 
         {/* ── Desktop Tabs (strictly hidden on screens <= 900px) ── */}
-        <div className="hud-nav-tabs" role="tablist" aria-label="Page tabs">
+        <div 
+          ref={navTabsRef}
+          className="hud-nav-tabs" 
+          role="tablist" 
+          aria-label="Page tabs"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+        >
           {TABS.map(tab => (
             <ThreeUIButton
               key={tab.path}
               active={location.pathname === tab.path}
-              onClick={() => navigate(tab.path)}
+              onClick={(e) => handleTabClick(tab.path, e)}
               role="tab"
               aria-selected={location.pathname === tab.path}
             >

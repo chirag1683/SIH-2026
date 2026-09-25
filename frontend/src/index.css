@@ -218,6 +218,13 @@ body {
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
 }
 
+@media (max-width: 1400px) {
+  .hud-nav {
+    padding: 0 1.25rem;
+    gap: 1rem;
+  }
+}
+
 .hud-logo {
   display: flex;
   align-items: center;
@@ -262,9 +269,35 @@ body {
 
 .hud-nav-tabs {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex: 1;
-  justify-content: center;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 4px 4px;
+  justify-content: flex-start;
+  cursor: grab;
+  user-select: none;
+}
+
+@supports (justify-content: safe center) {
+  .hud-nav-tabs {
+    justify-content: safe center;
+  }
+}
+
+.hud-nav-tabs:active {
+  cursor: grabbing;
+}
+
+.hud-nav-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .hud-tab {
